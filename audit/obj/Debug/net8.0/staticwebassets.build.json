@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "vZHq1D2R9FV5k45oWNSQw8IMMCOliWA+f9zk5X3CWAU=",
+  "Source": "audit",
+  "BasePath": "_content/audit",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

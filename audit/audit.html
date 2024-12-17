@@ -1,0 +1,158 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Data Collection</title>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-database.js"></script>
+</head>
+<body>
+    <h1>Device Data Collection</h1>
+    <form id="dataForm">
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date" required><br><br>
+
+        <label for="department">Department:</label>
+        <input type="text" id="department" name="department" required><br><br>
+
+        <!-- Device Entry Section -->
+        <div id="devices">
+            <div class="device-entry">
+                <h3>Device 1</h3>
+                <label for="brandModel1">Brand/Model:</label>
+                <input type="text" id="brandModel1" name="brandModel1" required><br><br>
+
+                <label for="snPidRev1">SN orVID, PID & REV:</label>
+                <input type="text" id="snPidRev1" name="snPidRev1" required><br><br>
+
+                <label for="assignedTo1">Assigned to:</label>
+                <input type="text" id="assignedTo1" name="assignedTo1" required><br><br>
+
+                <label for="dateAssigned1">Date Assigned:</label>
+                <input type="date" id="dateAssigned1" name="dateAssigned1" required><br><br>
+
+                <label for="condition1">Condition (0-100):</label>
+                <input type="number" id="condition1" name="condition1" required><br><br>
+
+                <label for="notes1">Notes:</label>
+                <textarea id="notes1" name="notes1" required></textarea><br><br>
+            </div>
+        </div>
+
+        <button type="button" id="addDeviceBtn">Add Device</button><br><br>
+
+        <button type="submit">Submit</button>
+    </form>
+
+    <script>
+        let deviceCount = 1;
+
+        // Add device fields when clicking the "Add Device" button
+        document.getElementById('addDeviceBtn').addEventListener('click', function () {
+            deviceCount++;
+            const devicesContainer = document.getElementById('devices');
+            const newDeviceEntry = document.createElement('div');
+            newDeviceEntry.classList.add('device-entry');
+            newDeviceEntry.innerHTML = `
+                        <h3>Device ${deviceCount}</h3>
+                        <label for="brandModel${deviceCount}">Brand/Model:</label>
+                        <input type="text" id="brandModel${deviceCount}" name="brandModel${deviceCount}" required><br><br>
+
+                        <label for="snPidRev${deviceCount}">SN orVID, PID & REV:</label>
+                        <input type="text" id="snPidRev${deviceCount}" name="snPidRev${deviceCount}" required><br><br>
+
+                        <label for="assignedTo${deviceCount}">Assigned to:</label>
+                        <input type="text" id="assignedTo${deviceCount}" name="assignedTo${deviceCount}" required><br><br>
+
+                        <label for="dateAssigned${deviceCount}">Date Assigned:</label>
+                        <input type="date" id="dateAssigned${deviceCount}" name="dateAssigned${deviceCount}" required><br><br>
+
+                        <label for="condition${deviceCount}">Condition (0-100):</label>
+                        <input type="number" id="condition${deviceCount}" name="condition${deviceCount}" required><br><br>
+
+                        <label for="notes${deviceCount}">Notes:</label>
+                        <textarea id="notes${deviceCount}" name="notes${deviceCount}" required></textarea><br><br>
+                    `;
+            devicesContainer.appendChild(newDeviceEntry);
+        });
+
+        // Load the Google API client with your API key
+        function loadClient() {
+            gapi.client.init({
+                apiKey: 'AIzaSyByWQMJfNsVnI5YM5ZCdXiYnE7D7gDHecA', // Replace this with your API key
+                discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
+            }).then(function () {
+                console.log("Google API client loaded");
+            }).catch(function (error) {
+                console.error("Error loading Google API client:", error);
+            });
+        }
+
+        // Handle form submission
+        const form = document.getElementById('dataForm');
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const data = {
+                date: document.getElementById('date').value,
+                department: document.getElementById('department').value,
+                devices: []
+            };
+
+            // Collect data for each device entry
+            for (let i = 1; i <= deviceCount; i++) {
+                data.devices.push({
+                    brandModel: document.getElementById(`brandModel${i}`).value,
+                    snPidRev: document.getElementById(`snPidRev${i}`).value,
+                    assignedTo: document.getElementById(`assignedTo${i}`).value,
+                    dateAssigned: document.getElementById(`dateAssigned${i}`).value,
+                    condition: document.getElementById(`condition${i}`).value,
+                    notes: document.getElementById(`notes${i}`).value
+                });
+            }
+
+            // Use Google Sheets API to save data
+            const params = {
+                spreadsheetId: '1x2kST70GpodZqg0q4HaM3auVPGq1Lg1wJ1fejwZ-VtE',
+                range: 'Sheet1!A1',  // Adjust this based on your sheet's layout
+                valueInputOption: 'RAW',
+            };
+
+            const valueRangeBody = {
+                "values": [
+                    [
+                        data.date,
+                        data.department
+                    ],
+                    ...data.devices.map(device => [
+                        device.brandModel,
+                        device.snPidRev,
+                        device.assignedTo,
+                        device.dateAssigned,
+                        device.condition,
+                        device.notes
+                    ])
+                ]
+            };
+
+            const request = gapi.client.sheets.spreadsheets.values.append(params, valueRangeBody);
+            request.then(function (response) {
+                console.log('Data sent to Google Sheets:', response);
+                alert('Data saved successfully!');
+                form.reset();
+                // Reset dynamic devices
+                document.getElementById('devices').innerHTML = '';
+                deviceCount = 1; // Reset the count for device entries
+            }, function (error) {
+                console.error('Error saving data:', error);
+                alert('Error saving data.');
+            });
+        });
+
+        // Load the API client when the page loads
+        gapi.load("client", loadClient);
+    </script>
+</body>
+</html>
